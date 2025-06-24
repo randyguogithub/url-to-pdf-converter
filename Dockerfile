@@ -50,7 +50,7 @@ RUN npm install
 
 # Copy the rest of the application code
 COPY . .
-ls -all
+RUN ls -all
 # Command to run the Node.js script when the container starts
 # The args for index.js will be passed via Cloud Build steps as environment variables
 CMD ["node", "index.js"]
