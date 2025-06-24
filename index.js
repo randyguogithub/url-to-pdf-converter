@@ -53,15 +53,18 @@ async function generatePdf(url, outputPath) {
     }
 }
 
-// Get URL and output filename from environment variables
-const targetUrl = "www.github.com";
-const outputFilename = "github.pdf";
+// Get URL and output filename from environment variables passed by Cloud Build
+const targetUrl = process.env.TARGET_URL;
+const outputFilename = process.env.OUTPUT_FILENAME;
 
-// if (!targetUrl || !outputFilename) {
-//     console.error('Usage: TARGET_URL and OUTPUT_FILENAME environment variables must be set.');
-//     process.exit(1);
-// }
+if (!targetUrl || !outputFilename) {
+    console.error('Usage: TARGET_URL and OUTPUT_FILENAME environment variables must be set.');
+    process.exit(1);
+}
 
-const outputPath = `/tmp/${outputFilename}`; // Always write to /tmp in Cloud Build
+// Ensure the URL has a protocol, which is required by puppeteer
+const finalUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
 
-generatePdf(targetUrl, outputPath);
+const outputPath = `/workspace/${outputFilename}`;
+
+generatePdf(finalUrl, outputPath);

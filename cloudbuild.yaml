@@ -16,16 +16,16 @@ steps:
   id: 'Generate PDF from URL'
   entrypoint: 'node' # The entrypoint for our custom image is 'node'
   args: ['index.js'] # The script to run
-  # env:
-  # - 'TARGET_URL=${_TARGET_URL}'       # URL to convert to PDF (e.g., https://www.google.com)
-  # - 'OUTPUT_FILENAME=${_OUTPUT_FILENAME}' # Output PDF filename (e.g., google-homepage.pdf)
+  env:
+  - 'TARGET_URL=${_TARGET_URL}'       # URL to convert to PDF (e.g., https://www.google.com)
+  - 'OUTPUT_FILENAME=${_OUTPUT_FILENAME}' # Output PDF filename (e.g., google-homepage.pdf)
 
 # Artifacts section to specify files to save to Cloud Storage
-# artifacts:
-#   objects:
-#     location: 'gs://gcf-v2-sources-443719758514-asia-east2' # GCS bucket path to store the output PDF
-#     paths:
-#     - '/tmp/${_OUTPUT_FILENAME}' # The path where our script saves the PDF inside the container
+artifacts:
+  objects:
+    location: 'gs://gcf-v2-sources-443719758514-asia-east2' # GCS bucket path to store the output PDF
+    paths:
+    - '/workspace/${_OUTPUT_FILENAME}' # The path where our script saves the PDF inside the container
     
 substitutions:
   _OUTPUT_FILENAME: "github.pdf"
