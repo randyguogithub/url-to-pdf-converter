@@ -1,44 +1,39 @@
-# Dockerfile
-# Use a slim Node.js base image
 FROM node:18-slim
 
 # Install Chromium dependencies (specific for Debian/Ubuntu based images like node:slim)
 # These dependencies are crucial for Puppeteer's Chromium to run correctly in a headless environment.
-# List from Puppeteer's troubleshooting guide: https://pptr.dev/#?product=Puppeteer&version=v22.0.0&show=usage-running-puppeteer-in-docker
+# This list is updated for modern Debian (like Bookworm, which node:18-slim uses)
+# Based on common Puppeteer recommendations and modern Debian package lists.
 RUN apt-get update \
     && apt-get install -y \
-    gconf-service \
+    ca-certificates \
+    fonts-liberation \
     libasound2 \
-    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libatspi2.0-0 \
     libcairo2 \
     libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libexpat1 \
     libfontconfig1 \
-    libgdk-pixbuf2.0-0 \
+    libgbm1 \
+    libglib2.0-0 \
     libgtk-3-0 \
-    libjpeg-turbo8 \
     libnspr4 \
     libnss3 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libx11-6 \
-    libx11-xcb1 \
     libxcomposite1 \
     libxcursor1 \
     libxdamage1 \
     libxext6 \
     libxfixes3 \
-    libxi6 \
     libxrandr2 \
     libxrender1 \
-    libxss1 \
     libxtst6 \
-    ca-certificates \
-    fonts-liberation \
-    libappindicator1 \
-    libnss3-tools \
-    lsb-release \
     xdg-utils \
-    wget \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
