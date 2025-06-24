@@ -40,7 +40,7 @@ steps:
 
 # 替换变量
 substitutions:
-  _BUCKET_NAME: 'your-bucket-name'  # 替换为实际存储桶名称
+  _BUCKET_NAME: 'gcf-v2-sources-443719758514-asia-east2'  # 替换为实际存储桶名称
 
 # 构建产物
 artifacts:
