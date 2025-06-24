@@ -21,11 +21,11 @@ steps:
 #   - 'OUTPUT_FILENAME=${_OUTPUT_FILENAME}' # Output PDF filename (e.g., google-homepage.pdf)
 
 # Artifacts section to specify files to save to Cloud Storage
-artifacts:
-  objects:
-    location: 'gs://gcf-v2-sources-443719758514-asia-east2' # GCS bucket path to store the output PDF
-    paths:
-    - '/tmp/${_OUTPUT_FILENAME}' # The path where our script saves the PDF inside the container
+# artifacts:
+#   objects:
+#     location: 'gs://gcf-v2-sources-443719758514-asia-east2' # GCS bucket path to store the output PDF
+#     paths:
+#     - '/tmp/${_OUTPUT_FILENAME}' # The path where our script saves the PDF inside the container
     
 substitutions:
   _OUTPUT_FILENAME: "github.pdf"
