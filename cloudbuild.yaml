@@ -35,9 +35,9 @@ steps:
   #   timeout: 600s  # 10分钟超时
 
   # 上传结果到GCS
-  - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', 'output.pdf', 'gs://${_BUCKET_NAME}/artifacts/']
-    waitFor: ['run-script']
+  # - name: 'gcr.io/cloud-builders/gsutil'
+  #   args: ['cp', 'output.pdf', 'gs://${_BUCKET_NAME}/artifacts/']
+  #   waitFor: ['run-script']
 
 # 替换变量
 substitutions:
