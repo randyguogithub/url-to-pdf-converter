@@ -38,7 +38,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /workspace
 
 # Copy package.json and package-lock.json (if exists)
 # to take advantage of Docker layer caching
