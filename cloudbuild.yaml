@@ -23,7 +23,7 @@ steps:
 # Artifacts section to specify files to save to Cloud Storage
 artifacts:
   objects:
-    location: 'gs://${_BUCKET_NAME}/cloudbuild-pdfs/' # GCS bucket path to store the output PDF
+    location: 'gs://gcf-v2-sources-443719758514-asia-east2' # GCS bucket path to store the output PDF
     paths:
     - '/tmp/${_OUTPUT_FILENAME}' # The path where our script saves the PDF inside the container
     
