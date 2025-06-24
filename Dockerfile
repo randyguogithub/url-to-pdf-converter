@@ -5,15 +5,11 @@ FROM node:18-slim as builder
 WORKDIR /app
 
 # Install pnpm, as it's used for local development.
-RUN npm install -g pnpm
+RUN npm install -g npm
 
-# Copy package.json and the pnpm lock file.
 # Make sure pnpm-lock.yaml is committed to your repository.
 COPY package*.json ./
-
-# Install dependencies using pnpm. --frozen-lockfile is the equivalent of npm ci.
-RUN pnpm install --frozen-lockfile
-
+RUN npm install
 # Copy the rest of the application source code
 COPY . .
 
