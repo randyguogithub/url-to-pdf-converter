@@ -3,11 +3,16 @@ steps:
 # This image will contain Node.js, Puppeteer, and all Chromium dependencies.
 - name: 'gcr.io/cloud-builders/docker'
   id: 'Build custom puppeteer image'
-  args: ['build', '-t', 'gcr.io/randyguo-test-43165062/polaris/puppeteer-pdf-converter', '.']
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      docker build -t gcr.io/randyguo-test-43165062/polaris/puppeteer-pdf-converter:latest
+      docker push asia-east2-docker.pkg.dev/randyguo-test-43165062/polaris/puppeteer-pdf-converter:latest
 
 # Step 2: Run the custom Docker image to generate the PDF
 # We pass the URL and output filename as environment variables.
-- name: 'gcr.io/randyguo-test-43165062/puppeteer-pdf-converter'
+- name: 'asia-east2-docker.pkg.dev/randyguo-test-43165062/polaris/puppeteer-pdf-converter:latest'
   id: 'Generate PDF from URL'
   entrypoint: 'node' # The entrypoint for our custom image is 'node'
   args: ['index.js'] # The script to run
