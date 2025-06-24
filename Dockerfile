@@ -4,14 +4,13 @@ FROM node:18-slim as builder
 # Set the working directory
 WORKDIR /app
 
-# Install pnpm, as it's used for local development.
-RUN npm install -g npm
+# Copy package.json and the package-lock.json.
+# The package-lock.json is essential for `npm ci`.
+COPY package.json ./
+COPY package-lock.json ./
 
-# Copy package manifests. Make sure pnpm-lock.yaml is committed to your repository.
-COPY package*.json ./
-
-# Install dependencies using pnpm. --frozen-lockfile is the equivalent of `npm ci`.
-RUN npm install
+# Install dependencies using `npm ci` for a clean, fast, and reproducible install.
+RUN npm ci
 
 # Copy the rest of the application source code
 COPY . .
