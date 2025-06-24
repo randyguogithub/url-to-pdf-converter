@@ -1,34 +1,35 @@
-from browser_use.browser import Browser
 import asyncio
 from playwright.async_api import async_playwright
+import img2pdf
 import os
-import time
-from img2pdf import convert
 
-def run_job():
-    print("Initializing browser...")
-    browser = Browser(headless=True)  # 无头模式适合Cloud环境
-    
-    # 执行浏览器自动化任务
-    browser.run("go to https://www.google.com")  # 打开指定URL
-    time.sleep(3)  # 等待页面加载
-    
-    print("Capturing screenshot...")
-    screenshot_path = "screenshot.png"
-    browser.run(f"screenshot to {screenshot_path}")  # 截图保存
-    
-    browser.close()  # 关闭浏览器
-    
-    # 转换为PDF
-    print("Converting to PDF...")
-    with open(screenshot_path, "rb") as img_file:
-        pdf_bytes = convert(img_file.read())
-    
-    pdf_path = "output.pdf"
-    with open(pdf_path, "wb") as pdf_file:
-        pdf_file.write(pdf_bytes)
-    
-    print(f"PDF saved at {os.path.abspath(pdf_path)}")
+async def capture_webpage(url, output_pdf):
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+        
+        # 导航到目标网址
+        await page.goto(url)
+        await page.wait_for_timeout(3000)  # 等待页面加载
+        
+        # 截图保存为临时图片
+        screenshot_path = "screenshot.png"
+        await page.screenshot(path=screenshot_path, full_page=True)
+        await browser.close()
+        
+        # 转换为PDF
+        with open(screenshot_path, "rb") as img_file:
+            img_data = img_file.read()
+        
+        pdf_bytes = img2pdf.convert(img_data)
+        
+        with open(output_pdf, "wb") as pdf_file:
+            pdf_file.write(pdf_bytes)
+        
+        # 清理临时文件
+        os.remove(screenshot_path)
+        print(f"PDF 已保存到 {os.path.abspath(output_pdf)}")
 
 if __name__ == "__main__":
-    run_job()
+    # 测试调用
+    asyncio.run(capture_webpage("https://www.google.com", "output.pdf"))

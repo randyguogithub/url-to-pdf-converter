@@ -1,6 +1,7 @@
 steps:
-  # 安装依赖和浏览器组件
-  - name: 'python:3.9'
+  # 安装系统依赖和 Playwright
+  - name: 'python:3.10'
+    id: 'install-dependencies'
     entrypoint: bash
     args:
       - -c
@@ -8,29 +9,46 @@ steps:
         apt-get update && apt-get install -y --no-install-recommends \
             libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
             libcups2 libdrm2 libxcomposite1 libxdamage1 \
-            libxfixes3 libxrandr2 libgbm1 libxkbcommon0
-        pip install browser-use img2pdf
+            libxfixes3 libxrandr2 libgbm1 libxkbcommon0 \
+            libpango-1.0-0 libcairo2 libasound2
+        
+        pip install playwright
         playwright install chromium
 
-  # 运行自动化任务
-  - name: 'python:3.9'
+  # 设置浏览器路径环境变量
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'set-env'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        echo "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright" >> $BUILDER_OUTPUT/output.env
+
+  # 运行截图脚本 (使用之前提供的脚本)
+  - name: 'python:3.10'
+    id: 'run-script'
     entrypoint: python
-    args: ['./main.py']
+    args: ['main.py']
     env:
-      - 'PLAYWRIGHT_BROWSERS_PATH=/usr/local/bin'
-    timeout: 300s  # 设置超时防止长时间挂起
+      - 'PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright'
+    timeout: 600s  # 10分钟超时
 
   # 上传结果到GCS
   - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', 'output.pdf', 'gs://YOUR_BUCKET_NAME/artifacts/']
+    args: ['cp', 'output.pdf', 'gs://${_BUCKET_NAME}/artifacts/']
+    waitFor: ['run-script']
 
+# 替换变量
+substitutions:
+  _BUCKET_NAME: 'your-bucket-name'  # 替换为实际存储桶名称
+
+# 构建产物
 artifacts:
   objects:
-    location: 'gs://YOUR_BUCKET_NAME/artifacts/'
+    location: 'gs://${_BUCKET_NAME}/artifacts/'
     paths: ['output.pdf']
 
-
-timeout: "1200s"  # Set a timeout for the build process (20 minutes)
+# 超时设置
+timeout: 1800s  # 30分钟总超时
 options:
-  logging: CLOUD_LOGGING_ONLY    
-
+  machineType: E2_HIGHCPU_8  # 使用高性能机器类型
