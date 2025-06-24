@@ -10,7 +10,6 @@ RUN npm install -g pnpm
 # Copy package.json and the pnpm lock file.
 # Make sure pnpm-lock.yaml is committed to your repository.
 COPY package*.json ./
-COPY pnpm-lock.yaml ./
 
 # Install dependencies using pnpm. --frozen-lockfile is the equivalent of npm ci.
 RUN pnpm install --frozen-lockfile
