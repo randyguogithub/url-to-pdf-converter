@@ -7,7 +7,7 @@ steps:
   args:
     - '-c'
     - |
-      docker build -t gcr.io/randyguo-test-43165062/polaris/puppeteer-pdf-converter:latest
+      docker build -t asia-east2-docker.pkg.dev/randyguo-test-43165062/polaris/puppeteer-pdf-converter:latest .
       docker push asia-east2-docker.pkg.dev/randyguo-test-43165062/polaris/puppeteer-pdf-converter:latest
 
 # Step 2: Run the custom Docker image to generate the PDF
