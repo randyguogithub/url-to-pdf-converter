@@ -52,3 +52,4 @@ artifacts:
 timeout: 1800s  # 30分钟总超时
 options:
   machineType: E2_HIGHCPU_8  # 使用高性能机器类型
+  logging: CLOUD_LOGGING_ONLY    
