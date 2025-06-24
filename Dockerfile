@@ -20,7 +20,6 @@ RUN apt-get update \
     libnss3 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libwebp6 \
     libx11-6 \
     libx11-xcb1 \
     libxcomposite1 \
