@@ -9,7 +9,7 @@ steps:
             libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
             libcups2 libdrm2 libxcomposite1 libxdamage1 \
             libxfixes3 libxrandr2 libgbm1 libxkbcommon0
-        pip install browser-use==0.1.4 img2pdf==0.5.1
+        pip install browser-use img2pdf
         playwright install chromium
 
   # 运行自动化任务
