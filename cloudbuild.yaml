@@ -22,7 +22,7 @@ steps:
     args:
       - -c
       - |
-        echo "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright" >> $BUILDER_OUTPUT/output.env
+        echo "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright" >> /workspace/output.env
 
   # 运行截图脚本 (使用之前提供的脚本)
   - name: 'python:3.10'
