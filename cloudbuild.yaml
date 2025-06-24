@@ -11,27 +11,28 @@ steps:
             libcups2 libdrm2 libxcomposite1 libxdamage1 \
             libxfixes3 libxrandr2 libgbm1 libxkbcommon0 \
             libpango-1.0-0 libcairo2 libasound2
-        
+        pip install --upgrade pip
         pip install playwright
         playwright install chromium
+        python main.py
 
   # 设置浏览器路径环境变量
-  - name: 'gcr.io/cloud-builders/gcloud'
-    id: 'set-env'
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        echo "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright" >> /workspace/output.env
+  # - name: 'gcr.io/cloud-builders/gcloud'
+  #   id: 'set-env'
+  #   entrypoint: bash
+  #   args:
+  #     - -c
+  #     - |
+  #       echo "PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright" >> /workspace/output.env
 
-  # 运行截图脚本 (使用之前提供的脚本)
-  - name: 'python:3.10'
-    id: 'run-script'
-    entrypoint: python
-    args: ['main.py']
-    env:
-      - 'PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright'
-    timeout: 600s  # 10分钟超时
+  # # 运行截图脚本 (使用之前提供的脚本)
+  # - name: 'python:3.10'
+  #   id: 'run-script'
+  #   entrypoint: python
+  #   args: ['main.py']
+  #   env:
+  #     - 'PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright'
+  #   timeout: 600s  # 10分钟超时
 
   # 上传结果到GCS
   - name: 'gcr.io/cloud-builders/gsutil'
