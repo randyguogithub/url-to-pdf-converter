@@ -6,12 +6,16 @@ from datetime import datetime
 from playwright.async_api import async_playwright
 from pathlib import Path
 
-async def add_cloud_build_info(page, build_id):
-    """Add Cloud Build info and timestamp to the page"""
+async def add_cloud_build_info(page, build_id, login_status):
+    """添加Cloud Build信息和时间戳到页面"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    info_text = f"Build ID: {build_id} | Time: {timestamp}"
+    status_text = "✅ Login Successful" if login_status else "❌ Login Failed"
+    info_text = f"Build ID: {build_id} | Time: {timestamp} | Status: {status_text}"
     
     await page.evaluate('''(info) => {
+        const existingInfo = document.getElementById('cloud-build-info');
+        if (existingInfo) existingInfo.remove();
+        
         const container = document.createElement('div');
         container.id = 'cloud-build-info';
         container.style.position = 'fixed';
@@ -30,85 +34,106 @@ async def add_cloud_build_info(page, build_id):
     }''', info_text)
 
 async def login_github(page, username, password):
-    """Log in to GitHub using provided credentials"""
+    """登录GitHub并报告所有遇到的情况"""
+    login_status = False
+    login_message = "No login attempt made"
+    
     try:
-        print(f"Accessing GitHub login page...")
-        await page.goto('https://github.com/login', timeout=10000, wait_until="networkidle")
-        await page.wait_for_selector('#login_field')
+        print("Accessing GitHub login page...")
+        await page.goto('https://github.com/login', timeout=15000, wait_until="networkidle")
+        await page.wait_for_selector('#login_field', timeout=5000)
         
-        # Fill in credentials
+        # 填写凭据
         await page.fill('#login_field', username)
         await page.fill('#password', password)
         
-        # Click sign in button
+        # 点击登录按钮
         await page.click('[name="commit"]')
         
-        # Wait for login completion - check for dashboard or auth error
-        await page.wait_for_selector('.shelf-title, .flash-error', timeout=10000)
+        # 等待登录结果
+        await asyncio.sleep(2)  # 等待可能的页面跳转
         
-        # Check for login errors
-        if await page.query_selector('.flash-error'):
-            error_message = await page.text_content('.flash-error')
-            print(f"❌ Login failed: {error_message}")
-            return False
-            
-        # Verify successful login by looking for profile avatar
-        if await page.query_selector('.AppHeader-user'):
+        # 检查登录结果
+        if await page.query_selector('.flash-error'):  # 登录失败消息
+            login_message = await page.eval_on_selector('.flash-error', 'el => el.textContent.trim()')
+            login_message = login_message.replace('×', '').strip()
+            print(f"❌ Login failed: {login_message}")
+        elif await page.query_selector('.AppHeader-user'):  # 登录成功元素
+            login_status = True
+            login_message = "Login successful"
             print("✅ GitHub login successful")
-            return True
+        elif await page.query_selector('[data-testid="login-button"]'):  # 仍然显示登录按钮
+            login_message = "Still on login page - login may have failed"
+            print("⚠️ Still on login page after login attempt")
         else:
-            print("⚠️ Login status unknown - proceeding with caution")
-            return True
-    
+            login_message = "Unknown login state - proceeding"
+            print("⚠️ Login status unknown - proceeding")
+            
     except Exception as e:
+        login_message = f"Login attempt error: {str(e)}"
         print(f"❌ Error during login: {str(e)}")
-        return False
+    
+    return login_status, login_message
+
+async def process_page(page, target_url, timeout):
+    """处理页面导航和PDF生成"""
+    build_id = os.getenv('BUILD_ID', 'local-build')
+    login_status = False
+    login_message = ""
+    
+    # 从环境变量获取凭据
+    username = os.getenv('GITHUB_USERNAME', "abc.com")
+    password = os.getenv('GITHUB_PASSWORD', "12345677")
+    
+    # 执行GitHub登录
+    login_status, login_message = await login_github(page, username, password)
+    
+    # 导航到目标URL（无论登录状态如何）
+    print(f"Navigating to: {target_url}")
+    try:
+        await page.goto(target_url, timeout=timeout, wait_until="networkidle")
+        print(f"Successfully navigated to {target_url}")
+    except Exception as nav_error:
+        login_message += f"\nNavigation error: {str(nav_error)}"
+        print(f"❌ Navigation failed: {str(nav_error)}")
+    
+    # 添加构建信息（包括登录状态）
+    await add_cloud_build_info(page, build_id, login_status)
+    await page.wait_for_timeout(1000)  # 确保信息渲染
+    
+    # 生成PDF的设置
+    pdf_options = {
+        "format": "A4",
+        "print_background": True,
+        "margin": {"top": "10mm", "right": "10mm", "bottom": "10mm", "left": "10mm"},
+        "display_header_footer": False,
+        "scale": 0.8,
+    }
+    
+    return login_status, login_message, pdf_options
 
 async def convert_html_to_pdf(output_path: str, timeout: int = 30000):
-    """Convert GitHub page to PDF after logging in"""
-    build_id = os.getenv('BUILD_ID', 'local-build')
-    
+    """将GitHub页面转换为PDF，并处理所有登录状态"""
     async with async_playwright() as p:
-        # Launch headless browser
+        # 启动无头浏览器
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         page = await context.new_page()
         
-        print(f"Starting GitHub access...")
+        print(f"Starting GitHub processing...")
         start_time = time.time()
         
         try:
-            # Retrieve credentials from environment or use provided defaults
-            username = os.getenv('GITHUB_USERNAME', "abc.com")
-            password = os.getenv('GITHUB_PASSWORD', "12345677")
+            # 处理页面并获取登录状态
+            login_status, login_message, pdf_options = await process_page(page, "https://github.com/", timeout)
             
-            # Perform GitHub login
-            login_success = await login_github(page, username, password)
-            
-            if not login_success:
-                print("❌ Aborting PDF generation due to login failure")
-                sys.exit(1)
-            
-            # Navigate to GitHub homepage after login
-            print("Accessing GitHub dashboard...")
-            await page.goto("https://github.com/", timeout=timeout, wait_until="networkidle")
-            
-            # Add build info and timestamp
-            await add_cloud_build_info(page, build_id)
-            await page.wait_for_timeout(1000)  # Ensure info renders
-            
-            # Generate PDF with GitHub-specific settings
-            pdf_options = {
-                "format": "A4",
-                "print_background": True,
-                "margin": {"top": "10mm", "right": "10mm", "bottom": "10mm", "left": "10mm"},
-                "display_header_footer": False,
-                "scale": 0.8,
-            }
-            
+            # 生成PDF
             print(f"Generating PDF: {output_path}")
             await page.pdf(path=output_path, **pdf_options)
             print("✅ PDF generated successfully")
+            
+            # 记录所有登录消息
+            return login_status, login_message
             
         except Exception as e:
             print(f"❌ Processing error: {str(e)}")
@@ -120,7 +145,7 @@ async def convert_html_to_pdf(output_path: str, timeout: int = 30000):
         print(f"⏱️ Total execution time: {elapsed:.2f} seconds")
 
 def ensure_output_directory(path: str):
-    """Ensure output directory exists"""
+    """确保输出目录存在"""
     output_dir = Path(path).parent
     if not output_dir.exists():
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -131,7 +156,13 @@ if __name__ == "__main__":
     ensure_output_directory(output_path)
     
     try:
-        asyncio.run(convert_html_to_pdf(output_path))
+        login_status, login_message = asyncio.run(convert_html_to_pdf(output_path))
+        print("\nProcessing completed with the following login results:")
+        print(login_message)
+        if login_status:
+            print("✅ Login was successful")
+        else:
+            print("❌ Login failed or encountered issues")
     except Exception as e:
         print(f"❌ Fatal error: {str(e)}")
         sys.exit(1)
