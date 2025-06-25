@@ -47,7 +47,7 @@ substitutions:
 artifacts:
   objects:
     location: 'gs://${_BUCKET_NAME}/artifacts/'
-    paths: ['output.pdf']
+    paths: ['github.pdf']
 
 # 超时设置
 timeout: 1800s  # 30分钟总超时
