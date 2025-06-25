@@ -32,4 +32,4 @@ async def capture_webpage(url, output_pdf):
 
 if __name__ == "__main__":
     # 测试调用
-    asyncio.run(capture_webpage("https://www.google.com", "output.pdf"))
+    asyncio.run(capture_webpage("https://www.github.com", "github.pdf"))
